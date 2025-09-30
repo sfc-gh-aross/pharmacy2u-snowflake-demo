@@ -73,25 +73,23 @@ ALTER TABLE PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS
 -- Row Access Policy for Sensitive Data
 -- ============================================================================
 
--- Create row access policy to restrict access to certain patient records
+-- Create simplified row access policy using registration date directly
+-- Note: Simplified to avoid circular dependency with masking policies
 CREATE OR REPLACE ROW ACCESS POLICY PATIENT_ACCESS_POLICY
-    AS (patient_id STRING) RETURNS BOOLEAN ->
+    AS (registration_date DATE) RETURNS BOOLEAN ->
     CASE
         WHEN CURRENT_ROLE() IN ('ACCOUNTADMIN', 'PHARMACY2U_DATA_ENGINEER') 
             THEN TRUE
-        -- BI users can only see patients from last 2 years
-        ELSE EXISTS (
-            SELECT 1 
-            FROM PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS p
-            WHERE p.PATIENT_ID = patient_id
-                AND p.REGISTRATION_DATE >= DATEADD(YEAR, -2, CURRENT_DATE())
-        )
+        -- BI users can only see patients from last 2 years (no table joins)
+        WHEN registration_date >= DATEADD(YEAR, -2, CURRENT_DATE())
+            THEN TRUE
+        ELSE FALSE
     END
 COMMENT = 'Row-level security: Restrict BI users to recent patients only';
 
--- Apply row access policy
+-- Apply row access policy on REGISTRATION_DATE column
 ALTER TABLE PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS
-    ADD ROW ACCESS POLICY PATIENT_ACCESS_POLICY ON (PATIENT_ID);
+    ADD ROW ACCESS POLICY PATIENT_ACCESS_POLICY ON (REGISTRATION_DATE);
 
 -- ============================================================================
 -- Demo Validation Queries
