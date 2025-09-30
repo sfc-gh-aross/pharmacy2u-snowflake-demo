@@ -123,8 +123,11 @@ tables:
           - '2024-08-20'
           - '2024-07-10'
     
-    measures:
+    facts:
       - name: TOTAL_PRESCRIPTIONS
+        expr: TOTAL_PRESCRIPTIONS
+        description: Total number of prescriptions filled for this patient
+        data_type: NUMBER
         synonyms:
           - total_prescriptions
           - total prescriptions
@@ -132,15 +135,15 @@ tables:
           - number of prescriptions
           - prescription volume
           - order count
-        description: Total number of prescriptions filled for this patient
-        expr: TOTAL_PRESCRIPTIONS
-        data_type: NUMBER
         sample_values:
           - 5
           - 12
           - 25
       
       - name: UNIQUE_DRUGS
+        expr: UNIQUE_DRUGS
+        description: Number of unique drugs/medications the patient has been prescribed
+        data_type: NUMBER
         synonyms:
           - unique_drugs
           - unique drugs
@@ -148,15 +151,15 @@ tables:
           - drug_count
           - medication count
           - distinct medications
-        description: Number of unique drugs/medications the patient has been prescribed
-        expr: UNIQUE_DRUGS
-        data_type: NUMBER
         sample_values:
           - 2
           - 5
           - 8
       
       - name: LIFETIME_VALUE_GBP
+        expr: LIFETIME_VALUE_GBP
+        description: Total lifetime value of the patient in British Pounds (GBP) - sum of all prescription costs
+        data_type: NUMBER
         synonyms:
           - lifetime_value_gbp
           - lifetime value
@@ -166,15 +169,15 @@ tables:
           - lifetime_revenue
           - clv
           - ltv
-        description: Total lifetime value of the patient in British Pounds (GBP) - sum of all prescription costs
-        expr: LIFETIME_VALUE_GBP
-        data_type: NUMBER
         sample_values:
           - 150.50
           - 1200.75
           - 5500.00
       
       - name: MARKETING_INTERACTIONS
+        expr: MARKETING_INTERACTIONS
+        description: Total number of marketing campaign interactions for this patient
+        data_type: NUMBER
         synonyms:
           - marketing_interactions
           - marketing interactions
@@ -182,105 +185,95 @@ tables:
           - engagement count
           - marketing_engagement
           - marketing_touches
-        description: Total number of marketing campaign interactions for this patient
-        expr: MARKETING_INTERACTIONS
-        data_type: NUMBER
         sample_values:
           - 3
           - 10
           - 25
       
       - name: CAMPAIGN_CONVERSIONS
+        expr: CAMPAIGN_CONVERSIONS
+        description: Number of marketing campaigns that resulted in a conversion (prescription order)
+        data_type: NUMBER
         synonyms:
           - campaign_conversions
           - campaign conversions
           - conversion_count
           - successful campaigns
           - marketing conversions
-        description: Number of marketing campaigns that resulted in a conversion (prescription order)
-        expr: CAMPAIGN_CONVERSIONS
-        data_type: NUMBER
         sample_values:
           - 1
           - 3
           - 7
-      
-      # Calculated Measures
-      - name: AVERAGE_PRESCRIPTION_VALUE
-        synonyms:
-          - average_prescription_value
-          - average prescription value
-          - avg prescription value
-          - mean order value
-          - average_order_value
-        description: Average value per prescription for this patient (Lifetime Value / Total Prescriptions)
-        expr: ROUND(LIFETIME_VALUE_GBP / NULLIF(TOTAL_PRESCRIPTIONS, 0), 2)
-        data_type: NUMBER
-      
-      - name: CONVERSION_RATE
-        synonyms:
-          - conversion_rate
-          - conversion rate
-          - campaign success rate
-          - marketing effectiveness
-          - conversion_percentage
-        description: Percentage of marketing interactions that resulted in conversions
-        expr: ROUND(100.0 * CAMPAIGN_CONVERSIONS / NULLIF(MARKETING_INTERACTIONS, 0), 2)
-        data_type: NUMBER
-      
+    
+    metrics:
       - name: PATIENT_COUNT
+        expr: COUNT(*)
+        description: Count of patients
         synonyms:
           - patient_count
           - patient count
           - total_patients
           - number of patients
           - customer count
-        description: Count of patients
-        expr: COUNT(*)
-        data_type: NUMBER
       
       - name: TOTAL_LIFETIME_VALUE
+        expr: SUM(LIFETIME_VALUE_GBP)
+        description: Sum of all patient lifetime values in GBP
         synonyms:
           - total_lifetime_value
           - total lifetime value
           - total_revenue
           - total_value
           - aggregate value
-        description: Sum of all patient lifetime values in GBP
-        expr: SUM(LIFETIME_VALUE_GBP)
-        data_type: NUMBER
       
       - name: AVG_LIFETIME_VALUE
+        expr: ROUND(AVG(LIFETIME_VALUE_GBP), 2)
+        description: Average lifetime value per patient in GBP
         synonyms:
           - avg_lifetime_value
           - average lifetime value
           - mean customer value
           - average_clv
-        description: Average lifetime value per patient in GBP
-        expr: ROUND(AVG(LIFETIME_VALUE_GBP), 2)
-        data_type: NUMBER
+      
+      - name: AVERAGE_PRESCRIPTION_VALUE
+        expr: ROUND(AVG(LIFETIME_VALUE_GBP / NULLIF(TOTAL_PRESCRIPTIONS, 0)), 2)
+        description: Average value per prescription across patients
+        synonyms:
+          - average_prescription_value
+          - average prescription value
+          - avg prescription value
+          - mean order value
+          - average_order_value
+      
+      - name: CONVERSION_RATE_PCT
+        expr: ROUND(100.0 * SUM(CAMPAIGN_CONVERSIONS) / NULLIF(SUM(MARKETING_INTERACTIONS), 0), 2)
+        description: Percentage of marketing interactions that resulted in conversions
+        synonyms:
+          - conversion_rate
+          - conversion rate
+          - campaign success rate
+          - marketing effectiveness
+          - conversion_percentage
       
       - name: HIGH_VALUE_PATIENTS
+        expr: SUM(CASE WHEN LIFETIME_VALUE_GBP > 2000 THEN 1 ELSE 0 END)
+        description: Count of high-value patients (Lifetime Value > £2000)
         synonyms:
           - high_value_patients
           - high value patients
           - platinum_customers
           - top_customers
           - vip_patients
-        description: Count of high-value patients (Lifetime Value > £2000)
-        expr: SUM(CASE WHEN LIFETIME_VALUE_GBP > 2000 THEN 1 ELSE 0 END)
-        data_type: NUMBER
       
       - name: ELDERLY_PATIENTS
+        expr: SUM(CASE WHEN AGE >= 65 THEN 1 ELSE 0 END)
+        description: Count of elderly patients (age 65 and over)
         synonyms:
           - elderly_patients
           - elderly patients
           - senior_patients
           - over_65
           - seniors
-        description: Count of elderly patients (age 65 and over)
-        expr: SUM(CASE WHEN AGE >= 65 THEN 1 ELSE 0 END)
-        data_type: NUMBER
 
 verified_queries:
   - name: "Top 5 prescribed drugs"
@@ -311,15 +304,15 @@ verified_queries:
     sql: |
       SELECT
         CASE
-          WHEN age < 30 THEN '18-30'
-          WHEN age < 50 THEN '31-50'
-          WHEN age < 65 THEN '51-65'
+          WHEN AGE < 30 THEN '18-30'
+          WHEN AGE < 50 THEN '31-50'
+          WHEN AGE < 65 THEN '51-65'
           ELSE '65+'
         END AS age_group,
         COUNT(*) AS patient_count,
-        ROUND(AVG(lifetime_value_gbp), 2) AS avg_lifetime_value
-      FROM __patient_360
-      WHERE total_prescriptions > 0
+        ROUND(AVG(LIFETIME_VALUE_GBP), 2) AS avg_lifetime_value
+      FROM __PATIENT_360
+      WHERE TOTAL_PRESCRIPTIONS > 0
       GROUP BY age_group
       ORDER BY patient_count DESC
   
@@ -330,12 +323,12 @@ verified_queries:
     sql: |
       SELECT
         COUNT(*) AS patients_over_65_no_conversion,
-        SUM(marketing_interactions) AS total_marketing_touches,
-        ROUND(AVG(total_prescriptions), 2) AS avg_prescriptions
-      FROM __patient_360
-      WHERE age >= 65
-        AND campaign_conversions = 0
-        AND marketing_interactions > 0
+        SUM(MARKETING_INTERACTIONS) AS total_marketing_touches,
+        ROUND(AVG(TOTAL_PRESCRIPTIONS), 2) AS avg_prescriptions
+      FROM __PATIENT_360
+      WHERE AGE >= 65
+        AND CAMPAIGN_CONVERSIONS = 0
+        AND MARKETING_INTERACTIONS > 0
   
   - name: "High-value patient distribution"
     question: "Show me the distribution of high-value patients by region"
@@ -343,13 +336,13 @@ verified_queries:
     verified_by: Pharmacy2U_Demo
     sql: |
       SELECT
-        LEFT(postcode, 2) AS region,
+        LEFT(POSTCODE, 2) AS region,
         COUNT(*) AS patient_count,
-        SUM(lifetime_value_gbp) AS total_value,
-        ROUND(AVG(lifetime_value_gbp), 2) AS avg_value
-      FROM __patient_360
-      WHERE lifetime_value_gbp > 2000
-      GROUP BY LEFT(postcode, 2)
+        SUM(LIFETIME_VALUE_GBP) AS total_value,
+        ROUND(AVG(LIFETIME_VALUE_GBP), 2) AS avg_value
+      FROM __PATIENT_360
+      WHERE LIFETIME_VALUE_GBP > 2000
+      GROUP BY LEFT(POSTCODE, 2)
       ORDER BY total_value DESC
       LIMIT 10
   
@@ -359,11 +352,11 @@ verified_queries:
     verified_by: Pharmacy2U_Demo
     sql: |
       SELECT
-        SUM(marketing_interactions) AS total_interactions,
-        SUM(campaign_conversions) AS total_conversions,
-        ROUND(100.0 * SUM(campaign_conversions) / NULLIF(SUM(marketing_interactions), 0), 2) AS conversion_rate_pct
-      FROM __patient_360
-      WHERE marketing_interactions > 0
+        SUM(MARKETING_INTERACTIONS) AS total_interactions,
+        SUM(CAMPAIGN_CONVERSIONS) AS total_conversions,
+        ROUND(100.0 * SUM(CAMPAIGN_CONVERSIONS) / NULLIF(SUM(MARKETING_INTERACTIONS), 0), 2) AS conversion_rate_pct
+      FROM __PATIENT_360
+      WHERE MARKETING_INTERACTIONS > 0
   
   - name: "Patient retention analysis"
     question: "How many patients haven't ordered in the last 3 months?"
@@ -372,11 +365,11 @@ verified_queries:
     sql: |
       SELECT
         COUNT(*) AS at_risk_patients,
-        ROUND(AVG(lifetime_value_gbp), 2) AS avg_lifetime_value,
-        SUM(lifetime_value_gbp) AS total_at_risk_value
-      FROM __patient_360
-      WHERE last_prescription_date < DATEADD(MONTH, -3, CURRENT_DATE())
-        AND total_prescriptions > 0
+        ROUND(AVG(LIFETIME_VALUE_GBP), 2) AS avg_lifetime_value,
+        SUM(LIFETIME_VALUE_GBP) AS total_at_risk_value
+      FROM __PATIENT_360
+      WHERE LAST_PRESCRIPTION_DATE < DATEADD(MONTH, -3, CURRENT_DATE())
+        AND TOTAL_PRESCRIPTIONS > 0
   
   - name: "Gender distribution by value tier"
     question: "Show patient gender distribution across value tiers"
@@ -385,16 +378,16 @@ verified_queries:
     sql: |
       SELECT
         CASE
-          WHEN lifetime_value_gbp > 5000 THEN 'Platinum'
-          WHEN lifetime_value_gbp > 2000 THEN 'Gold'
-          WHEN lifetime_value_gbp > 500 THEN 'Silver'
+          WHEN LIFETIME_VALUE_GBP > 5000 THEN 'Platinum'
+          WHEN LIFETIME_VALUE_GBP > 2000 THEN 'Gold'
+          WHEN LIFETIME_VALUE_GBP > 500 THEN 'Silver'
           ELSE 'Bronze'
         END AS customer_tier,
-        gender,
+        GENDER,
         COUNT(*) AS patient_count,
-        ROUND(AVG(age), 1) AS avg_age
-      FROM __patient_360
-      GROUP BY customer_tier, gender
-      ORDER BY customer_tier, gender
+        ROUND(AVG(AGE), 1) AS avg_age
+      FROM __PATIENT_360
+      GROUP BY customer_tier, GENDER
+      ORDER BY customer_tier, GENDER
 
 custom_instructions: "When showing monetary values, always include the GBP (£) currency symbol. Round all percentages to 2 decimal places. For patient counts, always use whole numbers. When discussing medications, use generic drug names when available. Respect patient privacy - never display NHS numbers or personally identifiable information in query results."
