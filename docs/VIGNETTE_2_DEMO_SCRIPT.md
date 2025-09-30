@@ -170,10 +170,16 @@ Top-right → ACCOUNTADMIN
 -- Create a demo copy of the table
 CREATE TABLE PATIENTS_DEMO CLONE PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS;
 
--- The "Friday mistake" - accidentally nullify emails
+-- Wait a few seconds for the clone
+CALL SYSTEM$WAIT(5);
+
+-- The "Friday mistake" - accidentally nullify emails for 10K patients
+-- Note: Using LIMIT for demo performance - updates in ~2-3 seconds
 UPDATE PATIENTS_DEMO
 SET EMAIL = NULL
-WHERE PATIENT_ID LIKE 'P%';
+WHERE PATIENT_ID IN (
+    SELECT PATIENT_ID FROM PATIENTS_DEMO LIMIT 10000
+);
 
 -- Oh no! Check the damage
 SELECT COUNT(*) as nullified_emails 
@@ -181,9 +187,17 @@ FROM PATIENTS_DEMO
 WHERE EMAIL IS NULL;
 ```
 
-**Point to the result showing many NULL emails:**
+**Point to the execution speed:**
 
-> "Disaster. We just wiped out thousands of email addresses. Traditionally, this means:
+> "Notice how fast that UPDATE ran—about 2-3 seconds for 10,000 patient records. **This is query pruning in action.** Snowflake only processes the subset we specified, not scanning the entire 100 million row table. Efficient, targeted updates."
+
+**Point to the result showing 10,000 NULL emails:**
+
+> "Disaster. We just wiped out 10,000 email addresses—a realistic Friday afternoon mistake. 
+>
+> Notice we updated only 10,000 records using a LIMIT clause for demo speed, but in production, this could be millions. **The principle is the same: query pruning means Snowflake only processes what we specify, nothing more.**
+>
+> Traditionally, recovering from this means:
 > 1. Stop the database
 > 2. Restore from last night's backup
 > 3. Lose all data changes from today
@@ -197,10 +211,11 @@ WHERE EMAIL IS NULL;
 -- Use Time Travel to query data from 10 seconds ago (before the mistake)
 SELECT 
     PATIENT_ID,
+    FIRST_NAME,
+    LAST_NAME,
     EMAIL
 FROM PATIENTS_DEMO
 AT(OFFSET => -10)  -- 10 seconds ago
-WHERE PATIENT_ID LIKE 'P%'
 LIMIT 10;
 ```
 
@@ -212,8 +227,10 @@ LIMIT 10;
 
 ```sql
 -- Restore the entire table from before the mistake
-CREATE OR REPLACE TABLE PATIENTS_DEMO CLONE PATIENTS_DEMO
-AT(OFFSET => -10);
+-- First drop the corrupted table, then recreate from Time Travel
+DROP TABLE PATIENTS_DEMO;
+CREATE TABLE PATIENTS_DEMO 
+CLONE PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS AT(OFFSET => -15);
 
 -- Verify recovery
 SELECT COUNT(*) as recovered_emails 
@@ -502,61 +519,125 @@ ORDER BY object_name, column_name;
 
 ---
 
-### Demo Point 8: Organizational Listings - Internal Data Marketplace (2 minutes)
+### Demo Point 8: Organizational Listings - Internal Data Marketplace (2.5 minutes)
 
 **Script reference**: `sql/demo_scripts/vignette2/07_organizational_listings_demo.sql`
 
-**Navigation**: Data Products → Private Sharing (or Data Marketplace → Private Listings)
+**Navigation**: Data Products → Private Sharing → Listings
 
 **Setup:**
 
 > "You've built incredible data assets—Patient 360 views, churn scores, prescription analytics. But if your teams can't discover them, they build duplicates, waste time, and create data inconsistency.
 >
-> **KEY MOMENT #4**: Snowflake has an internal marketplace where you publish data products for discovery and collaboration across your organization."
+> **KEY MOMENT #4**: Snowflake has a built-in internal marketplace where you publish data products for discovery and collaboration across your organization. Let me show you."
 
-**Action**: Show the marketplace UI (if Organizational Listings/Private Data Exchange is configured)
+**Action**: Navigate to show the actual organizational listings UI
 
-**Point to the listings** (or execute query if UI isn't available):
+**Click through the UI path:**
+
+Data Products → Private Sharing → Listings
+
+**Point to the three published listings:**
+
+> "Look at this—we have three **published organizational listings** in our internal marketplace. These are actual Snowflake listings, not simulated. Each one is a data product ready for discovery."
+
+**Click on the first listing: "Pharmacy2U Patient 360 Analytics"**
+
+**Walk through the listing details:**
+
+> "Here's what makes this powerful. Look at the rich metadata:
+>
+> **Description** - Complete business context: what's included, use cases, data governance
+> **Support Contact** - data-team@pharmacy2u.co.uk
+> **Approver Contact** - analytics-lead@pharmacy2u.co.uk  
+> **Data Dictionary** - Complete schema with field descriptions *(if added via UI)*
+> **Quick Start Examples** - Sample queries that users can run immediately *(if added via UI)*
+> **Attributes** - Data refresh schedule, PII level, compliance, row counts
+>
+> This isn't just a table in a catalog—it's a **fully documented data product** ready for consumption."
+
+**Show the other two listings:**
+
+**Navigate back and show:**
+- **Pharmacy2U ML Churn Risk Predictions** - ML-powered churn scores with actionable recommendations
+- **Pharmacy2U Prescription Analytics** - Aggregated prescription insights, no PII
+
+**Point to each:**
+
+> "Three data products, each with:
+> - **Complete metadata** - Business owner, update frequency, target audience
+> - **Governance status** - PII protection level clearly marked
+> - **Use case documentation** - Why teams should use this data
+> - **Sample queries** - Instant productivity *(if added)*
+> - **Access controls** - Automatically enforced based on role"
+
+**Explain the workflow:**
+
+> "Here's how it works in practice:
+> 
+> 1. **Discovery** - Marketing team searches 'patient lifetime value' in the marketplace
+> 2. **Evaluation** - Finds Patient 360 Analytics listing, reads documentation
+> 3. **Access Request** - Clicks to request access, routed to approver automatically
+> 4. **Approval** - Analytics lead approves, access granted instantly
+> 5. **Consumption** - Marketing queries the data using provided sample queries
+> 6. **Governed** - All masking policies apply automatically
+>
+> **From discovery to productive use: minutes, not days or weeks.**"
+
+**Show the Uniform Listing Locator (ULL):**
+
+**Point to or mention the ULL:**
+
+> "Each listing has a Uniform Listing Locator—a unique identifier:
+> - `ORGDATACLOUD$INTERNAL$PHARMACY2U_PATIENT_360_LISTING`
+> 
+> Users can query data products directly using this ULL, and all governance travels with it automatically."
+
+**Explain the business impact:**
+
+> "Your BI team builds Patient 360 dashboards. Instead of the marketing team duplicating that work, they discover it here, request access, and consume the **same trusted dataset**. 
+>
+> **No duplicate work. No data inconsistency. No wasted effort.**
+>
+> This is internal data democratization—turning data assets into discoverable products that drive cross-team collaboration and eliminate silos."
+
+**Competitive wedge - critical differentiator:**
+
+> "**THIS IS THE KEY DIFFERENTIATOR**: Microsoft Fabric has **no equivalent** to this. Zero. None. 
+>
+> In Fabric, you would need to:
+> - Manually document data products in SharePoint or Confluence
+> - Track access requests via email or ticketing systems  
+> - Manually grant permissions through separate admin tools
+> - Hope teams find your documentation
+> - Duplicate data products because discovery is impossible
+>
+> **Snowflake's Organizational Listings are:**
+> - Built into the platform—no external tools required
+> - Instantly discoverable—searchable marketplace UI
+> - Self-service access workflow—request, approve, consume
+> - Automatically governed—policies apply without configuration
+> - Live shares—zero data movement, real-time updates
+>
+> This **breaks down your internal data silos** and turns data into a strategic asset your entire organization can leverage."
+
+**Optional - Show the underlying catalog table:**
+
+**If time permits, navigate to Worksheets and run:**
 
 ```sql
--- Show internal data product catalog
+-- The catalog behind the marketplace
 SELECT 
     product_name,
-    product_description,
     business_domain,
     data_owner,
-    target_audience,
-    row_count
+    pii_status,
+    target_audience
 FROM PHARMACY2U_GOLD.DATA_PRODUCTS.DATA_PRODUCT_CATALOG
 ORDER BY product_name;
 ```
 
-**Walk through the catalog:**
-
-> "Here's your internal data marketplace:
-> 
-> **Patient 360 Analytics** - Complete patient view for BI and analytics  
-> **Churn Risk Scores** - ML predictions for retention campaigns  
-> **Prescription Analytics** - Clinical insights for operational teams
->
-> Each data product is:
-> - **Discoverable** - Search by keyword, domain, or audience
-> - **Documented** - Business owner, update frequency, use cases
-> - **Governed** - Access controls and PII status tracked
-> - **Shareable** - One-click access requests for authorized users"
-
-**Explain the impact:**
-
-> "Your BI team builds Patient 360 dashboards. Instead of the marketing team duplicating that work, they discover it here, request access, and consume the same trusted dataset. **No duplicate work, no data inconsistency, no wasted effort.**
->
-> This is internal data monetization—turning data assets into discoverable products that drive cross-team collaboration."
-
-**Competitive wedge - critical differentiator:**
-> "**Microsoft Fabric has no equivalent to this.** There's no internal marketplace, no data product catalog, no central discovery for shared analytics assets.
->
-> You'd need to build a manual SharePoint site or wiki to track what data exists where, and manually grant access through separate admin tools.
->
-> Snowflake's Organizational Listings are built into the platform—publish a data product, it's instantly discoverable, access-controlled, and governed. **This breaks down your internal data silos.**"
+> "And because this is Snowflake, everything is also queryable. Your BI team can programmatically discover data products, track usage, and build governance reports—all via SQL."
 
 **Timing checkpoint**: 13.5 minutes elapsed
 
@@ -660,13 +741,19 @@ ORDER BY product_name;
 
 ---
 
-### If Organizational Listings UI Unavailable:
+### If Organizational Listings UI is Slow:
 
-**Fallback**: Show the catalog via SQL query
-> "The UI isn't loading, but here's the data product catalog via SQL..." [Run query from `sql/demo_scripts/vignette2/07_organizational_listings_demo.sql`]
+**Fallback**: Show SHOW LISTINGS command
+> "While the UI loads, let me show you via SQL..."
+```sql
+SHOW LISTINGS LIKE 'PHARMACY2U%';
+```
 
-**Alternative**: Explain the concept with architecture diagram
-> "Think of it like an internal app store for data..." [Use whiteboard or slides]
+**Alternative**: Show the catalog table
+> "The listings are also queryable programmatically..." [Run query from `sql/demo_scripts/vignette2/07_organizational_listings_demo.sql`]
+
+**Explain the value**:
+> "These are real Snowflake organizational listings, not simulated. Each has a Uniform Listing Locator (ULL) that makes it instantly consumable across the organization with full governance."
 
 ---
 
@@ -688,7 +775,7 @@ ORDER BY product_name;
 |--------|-------------------|------|
 | **Opening** | "P1 incidents every 2 weeks, GDPR risk, internal silos—we fix all three" | 0:00 |
 | **Masking** | "Policy follows data everywhere—impossible to bypass" ⭐ | 2:30 |
-| **Time Travel** | "P1 incident → 30-second fix. Fabric can't do this." ⭐⭐ | 5:00 |
+| **Time Travel** | "Query pruning: 10K updates in 2-3 sec. P1 → 30-sec fix. Fabric can't do this." ⭐⭐ | 5:00 |
 | **Cloning** | "Instant dev/test, zero cost. Metadata magic." ⭐⭐⭐ | 6:30 |
 | **Access History** | "GDPR audit: week-long manual → 5-minute SQL query" | 8:00 |
 | **Cost Management** | "Per-second billing, resource monitors, no surprise bills" | 9:00 |
@@ -728,6 +815,8 @@ ORDER BY product_name;
 - Access History: `sql/demo_scripts/vignette2/04_audit_and_lineage.sql`
 - Object Tagging: `sql/demo_scripts/vignette2/06_object_tagging_demo.sql`
 - Org Listings: `sql/demo_scripts/vignette2/07_organizational_listings_demo.sql`
+- Listing Creation: `sql/features/marketplace/create_organizational_listings.sql`
+- Enrichment Guide: `docs/LISTING_ENRICHMENT_GUIDE.md` (for adding data dictionary/examples)
 
 ---
 

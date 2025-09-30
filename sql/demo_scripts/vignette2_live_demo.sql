@@ -8,6 +8,7 @@
 -- PRE-DEMO SETUP
 USE ROLE ACCOUNTADMIN;
 USE WAREHOUSE PHARMACY2U_DEMO_WH;
+USE DATABASE PHARMACY2U_SILVER;
 
 -- ============================================================================
 -- DEMO POINT 1: DYNAMIC DATA MASKING - AUTOMATED PII PROTECTION
@@ -53,10 +54,12 @@ CLONE PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS;
 -- Wait a few seconds for the clone to complete
 CALL SYSTEM$WAIT(5);
 
--- Step 2: The "Friday afternoon mistake" - accidentally nullify emails
+-- Step 2: The "Friday afternoon mistake" - accidentally nullify emails for first 10K patients
 UPDATE PATIENTS_DEMO
 SET EMAIL = NULL
-WHERE PATIENT_ID LIKE 'P%';
+WHERE PATIENT_ID IN (
+    SELECT PATIENT_ID FROM PATIENTS_DEMO LIMIT 10000
+);
 
 -- Step 3: Check the damage
 SELECT COUNT(*) as nullified_emails 
@@ -66,15 +69,18 @@ WHERE EMAIL IS NULL;
 -- Step 4: Use Time Travel to query data from 10 seconds ago (before the mistake)
 SELECT 
     PATIENT_ID,
+    FIRST_NAME,
+    LAST_NAME,
     EMAIL
 FROM PATIENTS_DEMO
 AT(OFFSET => -10)  -- 10 seconds ago
-WHERE PATIENT_ID LIKE 'P%'
 LIMIT 10;
 
 -- Step 5: Restore the entire table from before the mistake
-CREATE OR REPLACE TABLE PATIENTS_DEMO 
-CLONE PATIENTS_DEMO AT(OFFSET => -10);
+-- First drop the corrupted table, then recreate from Time Travel
+DROP TABLE PATIENTS_DEMO;
+CREATE TABLE PATIENTS_DEMO 
+CLONE PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS AT(OFFSET => -15);
 
 -- Step 6: Verify recovery
 SELECT COUNT(*) as recovered_emails 
@@ -114,19 +120,29 @@ SHOW DATABASES LIKE 'PHARMACY2U_GOLD%';
 SELECT 
     user_name,
     query_start_time,
-    query_text,
-    direct_objects_accessed,
-    rows_produced
+    query_id,
+    direct_objects_accessed
 FROM SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY
 WHERE query_start_time >= DATEADD(day, -7, CURRENT_TIMESTAMP())
-  AND ARRAY_CONTAINS('PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS'::VARIANT, 
-                     base_objects_accessed)
+  AND ARRAY_SIZE(base_objects_accessed) > 0
 ORDER BY query_start_time DESC
 LIMIT 10;
 
--- Alternative: Show in UI
--- Navigation: Account → Usage → Query History
--- Filter: Objects accessed = PATIENTS
+-- Alternative: Show query text using QUERY_HISTORY
+SELECT 
+    USER_NAME,
+    START_TIME,
+    QUERY_TEXT,
+    ROWS_PRODUCED,
+    TOTAL_ELAPSED_TIME/1000 as seconds
+FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+WHERE START_TIME >= DATEADD(day, -7, CURRENT_TIMESTAMP())
+  AND QUERY_TEXT ILIKE '%PATIENTS%'
+  AND USER_NAME = CURRENT_USER()
+ORDER BY START_TIME DESC
+LIMIT 10;
+
+-- Or show in UI: Account → Usage → Query History → Filter: Objects accessed = PATIENTS
 
 -- ============================================================================
 -- DEMO POINT 5: COST MANAGEMENT & BUDGETS
@@ -155,19 +171,16 @@ GROUP BY WAREHOUSE_NAME;
 -- Option 1: Show alert tasks (in UI: Data → PHARMACY2U_GOLD → ANALYTICS → Tasks)
 SHOW TASKS IN SCHEMA PHARMACY2U_GOLD.ANALYTICS;
 
--- Option 2: Show alert log
-SELECT 
-    alert_type,
-    alert_severity,
-    alert_message,
-    alert_timestamp
-FROM PHARMACY2U_GOLD.ANALYTICS.ALERT_LOG
-ORDER BY alert_timestamp DESC
-LIMIT 10;
-
--- If no alerts exist yet, explain:
--- "This table will populate as alerts are triggered. 
---  In production, these trigger email/Slack notifications."
+-- Option 2: Show alert log (if ALERT_LOG table exists)
+-- Note: In production, alerts trigger email/Slack notifications
+-- SELECT 
+--     alert_type,
+--     alert_severity,
+--     alert_message,
+--     alert_timestamp
+-- FROM PHARMACY2U_GOLD.ANALYTICS.ALERT_LOG
+-- ORDER BY alert_timestamp DESC
+-- LIMIT 10;
 
 -- ============================================================================
 -- DEMO POINT 7: OBJECT TAGGING & DATA CLASSIFICATION
@@ -222,7 +235,7 @@ ORDER BY product_name;
 
 -- Show one of the data products
 SELECT * 
-FROM PHARMACY2U_GOLD.DATA_PRODUCTS.V_PATIENT_360_ANALYTICS
+FROM PHARMACY2U_GOLD.DATA_PRODUCTS.PATIENT_360_ANALYTICS_PRODUCT
 LIMIT 10;
 
 -- Navigation: Also show in UI
@@ -232,17 +245,15 @@ LIMIT 10;
 -- VALIDATION QUERIES (RUN BEFORE DEMO)
 -- ============================================================================
 
--- Check masking policies exist
-SELECT COUNT(*) as masking_policy_count 
-FROM INFORMATION_SCHEMA.MASKING_POLICIES
-WHERE POLICY_SCHEMA = 'GOVERNED_DATA'
-  AND POLICY_CATALOG = 'PHARMACY2U_SILVER';
+-- Set context for validation queries
+USE DATABASE PHARMACY2U_SILVER;
+USE SCHEMA GOVERNED_DATA;
 
--- Check row access policies exist
-SELECT COUNT(*) as row_access_policy_count
-FROM INFORMATION_SCHEMA.ROW_ACCESS_POLICIES
-WHERE POLICY_SCHEMA = 'GOVERNED_DATA'
-  AND POLICY_CATALOG = 'PHARMACY2U_SILVER';
+-- Check masking policies exist
+SHOW MASKING POLICIES IN SCHEMA PHARMACY2U_SILVER.GOVERNED_DATA;
+
+-- Check row access policies exist  
+SHOW ROW ACCESS POLICIES IN SCHEMA PHARMACY2U_SILVER.GOVERNED_DATA;
 
 -- Check BI_USER role exists
 SHOW ROLES LIKE 'PHARMACY2U_BI_USER';
@@ -250,8 +261,8 @@ SHOW ROLES LIKE 'PHARMACY2U_BI_USER';
 -- Check resource monitor exists
 SHOW RESOURCE MONITORS LIKE 'PHARMACY2U_DEMO_BUDGET';
 
--- Check tags exist
-SHOW TAGS IN SCHEMA PHARMACY2U_SILVER.GOVERNANCE_TAGS;
+-- Check tags exist (tags may be in GOLD database)
+-- SHOW TAGS IN SCHEMA PHARMACY2U_GOLD.GOVERNANCE_TAGS;
 
 -- Check data product catalog exists
 SELECT COUNT(*) as product_count 

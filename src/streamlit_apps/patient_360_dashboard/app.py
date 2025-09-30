@@ -35,33 +35,141 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for Pharmacy2U branding
+# Custom CSS for Pharmacy2U branding (matching pharmacy2u.co.uk)
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+    
+    /* Pharmacy2U Color Palette */
+    :root {
+        --p2u-purple: #6a0dad;
+        --p2u-teal: #20b2aa;
+        --p2u-pink: #ff69b4;
+        --p2u-blue: #007bff;
+        --p2u-dark-purple: #4a0080;
+        --p2u-light-bg: #f8f9fa;
+    }
+    
+    /* Global Font */
+    html, body, [class*="css"] {
+        font-family: 'Open Sans', sans-serif;
+    }
+    
+    /* Main Header with Pharmacy2U Logo */
     .main-header {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #0066CC;
+        color: var(--p2u-purple);
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--p2u-purple) 0%, var(--p2u-teal) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
         margin-bottom: 1rem;
     }
-    .metric-card {
-        background-color: #f0f8ff;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid #0066CC;
+    
+    .logo-text {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--p2u-purple);
     }
+    
+    /* Metric Cards */
+    .metric-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border-left: 5px solid var(--p2u-teal);
+        box-shadow: 0 4px 6px rgba(106, 13, 173, 0.1);
+    }
+    
     .stMetric {
         background-color: #ffffff;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-top: 3px solid var(--p2u-teal);
     }
+    
+    /* Section Headers */
+    h2, h3 {
+        color: var(--p2u-purple) !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Buttons and Interactive Elements */
+    .stButton>button {
+        background: linear-gradient(135deg, var(--p2u-teal) 0%, var(--p2u-blue) 100%);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background: linear-gradient(135deg, var(--p2u-purple) 0%, var(--p2u-pink) 100%);
+        box-shadow: 0 6px 12px rgba(106, 13, 173, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+        border-right: 3px solid var(--p2u-purple);
+    }
+    
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2 {
+        color: var(--p2u-purple) !important;
+    }
+    
+    /* Data Table Styling */
+    .dataframe {
+        border: 2px solid var(--p2u-teal) !important;
+        border-radius: 0.5rem;
+    }
+    
+    /* Footer Styling */
+    .footer {
+        background: linear-gradient(135deg, var(--p2u-purple) 0%, var(--p2u-teal) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    /* Vibrant Accent Colors */
+    .accent-purple { color: var(--p2u-purple); }
+    .accent-teal { color: var(--p2u-teal); }
+    .accent-pink { color: var(--p2u-pink); }
 </style>
 """, unsafe_allow_html=True)
 
-# Application header
-st.markdown('<div class="main-header">💊 Pharmacy2U Patient 360 Dashboard</div>', unsafe_allow_html=True)
-st.markdown("**Real-time pharmaceutical analytics powered by Snowflake**")
+# Application header with Pharmacy2U branding
+st.markdown("""
+<div class="logo-container">
+    <img src="https://www.pharmacy2u.co.uk/themes/p2u/assets/p2u_logo.svg" 
+         alt="Pharmacy2U Logo" 
+         style="height: 60px; margin-right: 1rem;">
+    <div style="flex-grow: 1;">
+        <h1 style="color: #6a0dad; font-size: 2rem; font-weight: 700; margin: 0;">
+            Patient 360 Dashboard
+        </h1>
+        <p style="color: #20b2aa; font-size: 1rem; margin: 0.25rem 0 0 0;">
+            Real-time pharmaceutical analytics powered by Snowflake Data Cloud
+        </p>
+    </div>
+</div>
+<hr style="border: none; height: 2px; background: linear-gradient(90deg, #6a0dad 0%, #20b2aa 100%); margin: 1.5rem 0;">
+""", unsafe_allow_html=True)
 
 # Sidebar filters
 st.sidebar.header("🔍 Filters")
@@ -164,10 +272,16 @@ with col1:
                 x='AGE', 
                 nbins=20,
                 title='Patient Age Distribution',
-                color_discrete_sequence=['#0066CC']
+                color_discrete_sequence=['#20b2aa']
             )
-            fig_age.update_layout(showlegend=False, height=400)
-            st.plotly_chart(fig_age, use_container_width=True)
+            fig_age.update_layout(
+                showlegend=False, 
+                height=400,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#6a0dad')
+            )
+            st.plotly_chart(fig_age, use_container_width=True, config={'displayModeBar': False})
         else:
             st.info("Age data not available")
     except Exception as e:
@@ -182,10 +296,15 @@ with col2:
                 values=gender_counts.values,
                 names=gender_counts.index,
                 title='Patient Gender Distribution',
-                color_discrete_sequence=['#0066CC', '#66B3FF']
+                color_discrete_sequence=['#6a0dad', '#20b2aa', '#ff69b4']
             )
-            fig_gender.update_layout(height=400)
-            st.plotly_chart(fig_gender, use_container_width=True)
+            fig_gender.update_layout(
+                height=400,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#6a0dad')
+            )
+            st.plotly_chart(fig_gender, use_container_width=True, config={'displayModeBar': False})
         else:
             st.info("Gender data not available")
     except Exception as e:
@@ -204,10 +323,17 @@ with col3:
                 y='LIFETIME_VALUE_GBP',
                 title='Prescriptions vs Lifetime Value',
                 trendline='ols',
-                color_discrete_sequence=['#0066CC']
+                color_discrete_sequence=['#6a0dad'],
+                render_mode='svg'
             )
-            fig_scatter.update_layout(height=400)
-            st.plotly_chart(fig_scatter, use_container_width=True)
+            fig_scatter.update_layout(
+                height=400,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#6a0dad')
+            )
+            fig_scatter.update_traces(marker=dict(size=8, opacity=0.6))
+            st.plotly_chart(fig_scatter, use_container_width=True, config={'displayModeBar': False})
         else:
             st.info("Prescription data not available")
     except Exception as e:
@@ -220,10 +346,16 @@ with col4:
                 df,
                 x='UNIQUE_DRUGS',
                 title='Distribution of Unique Drugs per Patient',
-                color_discrete_sequence=['#0066CC']
+                color_discrete_sequence=['#ff69b4']
             )
-            fig_drugs.update_layout(showlegend=False, height=400)
-            st.plotly_chart(fig_drugs, use_container_width=True)
+            fig_drugs.update_layout(
+                showlegend=False, 
+                height=400,
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#6a0dad')
+            )
+            st.plotly_chart(fig_drugs, use_container_width=True, config={'displayModeBar': False})
         else:
             st.info("Drug data not available")
     except Exception as e:
@@ -251,9 +383,13 @@ except Exception as e:
 st.markdown("---")
 st.markdown(
     """
-    <div style='text-align: center; color: #666; padding: 1rem;'>
-        <p>Pharmacy2U Patient 360 Dashboard | Powered by Snowflake Data Cloud</p>
-        <p>Data updated in real-time from unified data platform</p>
+    <div class='footer'>
+        <h3 style='color: white; margin-bottom: 0.5rem;'>💊 Pharmacy2U Patient 360 Dashboard</h3>
+        <p style='font-size: 1.1rem; margin-bottom: 0.5rem;'>Powered by Snowflake Data Cloud</p>
+        <p style='opacity: 0.9;'>Real-time analytics from unified pharmaceutical data platform</p>
+        <p style='font-size: 0.9rem; opacity: 0.8; margin-top: 1rem;'>
+            Pharmacy2U - 25 years of digital healthcare leadership
+        </p>
     </div>
     """,
     unsafe_allow_html=True

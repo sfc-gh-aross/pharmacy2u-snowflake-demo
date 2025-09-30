@@ -391,15 +391,21 @@ GROUP BY churn_risk_category;
 
 **Action**: Show that churn scores or ML outputs can be published as internal data products
 
-**Reference the Organizational Listings demo:**
+**Reference the Organizational Listings from Vignette 2:**
 
-> "Remember the internal marketplace from Vignette 2? Your data science team can publish these churn risk scores as a **data product**:
-> - Marketing team discovers it in the marketplace
-> - Requests access (auto-approved based on role)
-> - Joins churn scores with their campaign data
-> - Launches retention campaigns for high-risk patients
+> "Remember the internal marketplace from Vignette 2? We have **real Snowflake organizational listings** already published—including a Churn Risk Scores listing.
 >
-> **Zero data movement. Zero complex integrations. Instant business value from ML.**"
+> Your data science team built these predictions. **They're now discoverable in the internal marketplace**:
+> - Marketing searches 'churn' in Data Products → Private Sharing → Listings
+> - Finds 'Pharmacy2U ML Churn Risk Predictions' listing
+> - Reads the documentation: what it predicts, how to use it, sample queries
+> - Requests access (routed to ML team lead for approval)
+> - Instantly queries churn scores using the Uniform Listing Locator
+> - Joins with campaign data to launch retention campaigns
+>
+> **This is the last-mile connection**: ML predictions → data product → business action. All within Snowflake, all governed, all instant.
+>
+> **Zero data movement. Zero complex integrations. Zero delay from model to marketing campaign.**"
 
 **Alternative - Show SQL join:**
 
@@ -638,7 +644,7 @@ LIMIT 10;
 >
 > **Vignette 1**: We unified fragmented data sources into a governed Patient 360 foundation. **Same-day integration** instead of months.
 >
-> **Vignette 2**: We made that foundation **unbreakable and discoverable**—automated governance, 30-second incident recovery, internal collaboration through organizational listings.
+> **Vignette 2**: We made that foundation **unbreakable and discoverable**—automated governance, 30-second incident recovery, and a real internal marketplace with published organizational listings for data products.
 >
 > **Vignette 3**: We put that foundation to work with AI—**democratized self-service analytics** for business users, **smooth MLOps delivery** for data science, and **serverless AI capabilities** for everyone.
 >

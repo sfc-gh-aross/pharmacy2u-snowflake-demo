@@ -389,9 +389,9 @@ LIMIT 10;
 
 > "So we've built this unified data foundation—Patient 360 data from fragmented sources, automated pipelines, analytics-ready views. **But foundation isn't enough.**
 >
-> You're handling highly sensitive patient data under strict GDPR requirements. Your lean team needs confidence that mistakes are reversible. Your business units need to discover and access this valuable data asset.
+> You're handling highly sensitive patient data under strict GDPR requirements. Your lean team needs confidence that mistakes are reversible. Your business units need to discover and access this valuable data asset—turning these Patient 360 views into discoverable data products.
 >
-> In the next 15 minutes, let me show you how Snowflake makes this foundation **unbreakable and discoverable** through automated governance, operational resilience, and secure internal collaboration.
+> In the next 15 minutes, let me show you how Snowflake makes this foundation **unbreakable and discoverable** through automated governance, operational resilience, and a real internal marketplace for secure collaboration.
 >
 > We're going to turn potential risk into competitive advantage."
 

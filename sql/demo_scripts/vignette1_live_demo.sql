@@ -34,18 +34,19 @@ SELECT 'GOLD' as layer, COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHE
 
 -- Query 1: Show raw JSON marketing events
 SELECT * 
-FROM PHARMACY2U_BRONZE.RAW_DATA.MARKETING_EVENTS 
+FROM PHARMACY2U_BRONZE.RAW_DATA.RAW_MARKETING_EVENTS 
 LIMIT 10;
 
 -- Query 2: Parse nested JSON using dot notation (KEY MOMENT #1)
 SELECT 
-    patient_id,
-    campaign_id,
-    interaction_timestamp,
-    engagement_data:channel::STRING as channel,
-    engagement_data:device::STRING as device,
-    engagement_data:duration_seconds::INT as duration
-FROM PHARMACY2U_BRONZE.RAW_DATA.MARKETING_EVENTS
+    EVENT_DATA:patient_id::STRING as patient_id,
+    EVENT_DATA:campaign_id::STRING as campaign_id,
+    EVENT_DATA:campaign_name::STRING as campaign_name,
+    EVENT_DATA:event_timestamp::TIMESTAMP as event_timestamp,
+    EVENT_DATA:channel::STRING as channel,
+    EVENT_DATA:metadata.device_type::STRING as device_type,
+    EVENT_DATA:conversion_flag::BOOLEAN as conversion_flag
+FROM PHARMACY2U_BRONZE.RAW_DATA.RAW_MARKETING_EVENTS
 LIMIT 10;
 
 -- ============================================================================
@@ -63,18 +64,15 @@ SELECT
     FIRST_NAME,
     LAST_NAME,
     AGE,
+    GENDER,
     POSTCODE,
-    REGISTRATION_DATE,
-    TOTAL_LIFETIME_ORDERS
+    REGISTRATION_DATE
 FROM PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS
 LIMIT 10;
 
 -- Show refresh history (optional, if time permits)
-SELECT * FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
-    'PHARMACY2U_SILVER.GOVERNED_DATA.PATIENTS'
-))
-ORDER BY REFRESH_START_TIME DESC
-LIMIT 5;
+-- Note: To view Dynamic Table metadata, check the table definition in the UI
+-- or use: SHOW DYNAMIC TABLES IN PHARMACY2U_SILVER.GOVERNED_DATA;
 
 -- ============================================================================
 -- DEMO POINT 4: THE PATIENT 360 VIEW - ANALYTICS-READY DATA
@@ -172,7 +170,7 @@ FROM PHARMACY2U_GOLD.ANALYTICS.V_PATIENT_360
 HAVING COUNT(*) >= 100000;
 
 SELECT 'Marketing events OK' as status, COUNT(*) as count 
-FROM PHARMACY2U_BRONZE.RAW_DATA.MARKETING_EVENTS
+FROM PHARMACY2U_BRONZE.RAW_DATA.RAW_MARKETING_EVENTS
 HAVING COUNT(*) > 0;
 
 SELECT 'Demo script validation complete' as STATUS;
