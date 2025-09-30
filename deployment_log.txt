@@ -1,0 +1,22 @@
+2025-09-30 11:01:23,072 - INFO - 🚀 Starting Pharmacy2U Demo Deployment
+2025-09-30 11:01:23,072 - INFO -    Connection: pharmacy2u_demo_connection
+2025-09-30 11:01:23,072 - INFO -    Project Root: /Users/axross/Snowflake/Customers/Pharmacy2U/pharmacy2u-snowflake-demo
+2025-09-30 11:01:23,072 - INFO - 
+2025-09-30 11:01:23,072 - INFO - 🔍 Validating connection: pharmacy2u_demo_connection
+2025-09-30 11:01:29,615 - INFO -    ✅ Connection validated successfully
+2025-09-30 11:01:29,616 - INFO -    Account: pharmacy2u_demo_connection
+2025-09-30 11:01:29,616 - INFO - ================================================================================
+2025-09-30 11:01:29,616 - INFO - PHASE 1: INFRASTRUCTURE DEPLOYMENT
+2025-09-30 11:01:29,616 - INFO - ================================================================================
+2025-09-30 11:01:29,616 - INFO - 📄 Executing: 00_database_setup.sql
+2025-09-30 11:01:41,226 - INFO -    ✅ Completed: 00_database_setup.sql
+2025-09-30 11:01:41,226 - INFO - 📄 Executing: 01_warehouse_configuration.sql
+2025-09-30 11:01:48,066 - INFO -    ✅ Completed: 01_warehouse_configuration.sql
+2025-09-30 11:01:48,067 - INFO - 📄 Executing: 02_schema_creation.sql
+2025-09-30 11:01:56,785 - ERROR -    ❌ Failed: 02_schema_creation.sql
+2025-09-30 11:01:56,786 - ERROR -    Error: ╭─ Error ──────────────────────────────────────────────────────────────────────╮
+│ 001003 (42000): 01bf64f9-0106-cb46-0001-46f2010cea06: SQL compilation error: │
+│ syntax error line 29 at position 0 unexpected 'COMMENT'.                     │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+2025-09-30 11:01:56,786 - ERROR - ❌ Infrastructure deployment failed

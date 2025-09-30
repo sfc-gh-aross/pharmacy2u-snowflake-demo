@@ -1,0 +1,41 @@
+# Development Environment Configuration
+environment: development
+
+snowflake:
+  connection: pharmacy2u_demo_connection
+  database: PHARMACY2U_DEMO_DB
+  schema: DEMO_SCHEMA
+  warehouse: PHARMACY2U_DEMO_WH
+  role: ACCOUNTADMIN
+
+warehouses:
+  demo_wh:
+    size: XSMALL
+    auto_suspend: 60
+    auto_resume: true
+    initially_suspended: true
+    max_cluster_count: 1
+    min_cluster_count: 1
+    scaling_policy: STANDARD
+
+data_generation:
+  prescriptions:
+    target_records: 500000
+    method: snowpark_python
+    benchmark_time_seconds: 300
+  
+  patients:
+    target_records: 100000
+    method: snowpark_python
+    benchmark_time_seconds: 300
+  
+  marketing_events:
+    target_records: 1000000
+    method: local_python
+    benchmark_time_seconds: 180
+    format: json
+
+features:
+  time_travel_retention_days: 1
+  enable_search_optimization: true
+  enable_data_classification: true

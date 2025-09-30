@@ -1,0 +1,53 @@
+# Snowflake Project Configuration for Pharmacy2U Demo
+definition_version: 1
+
+# Project metadata
+project:
+  name: pharmacy2u-snowflake-demo
+  description: Snowflake demonstration for Pharmacy2U showcasing data unification, governance, and AI/ML capabilities
+  version: 1.0.0
+
+# Environment configurations
+environments:
+  demo:
+    connection: pharmacy2u_demo_connection
+    database: PHARMACY2U_DEMO_DB
+    schema: DEMO_SCHEMA
+    warehouse: PHARMACY2U_DEMO_WH
+    role: ACCOUNTADMIN
+
+# Streamlit applications
+streamlit:
+  - name: patient_360_dashboard
+    stage: pharmacy2u_streamlit_stage
+    query_warehouse: pharmacy2u_demo_wh
+    main_file: src/streamlit_apps/patient_360_dashboard/app.py
+    pages_dir: src/streamlit_apps/patient_360_dashboard/pages
+    environment_file: src/streamlit_apps/patient_360_dashboard/environment.yml
+  
+  - name: ml_model_explorer
+    stage: pharmacy2u_streamlit_stage
+    query_warehouse: pharmacy2u_demo_wh
+    main_file: src/streamlit_apps/ml_model_explorer/app.py
+    environment_file: src/streamlit_apps/ml_model_explorer/environment.yml
+
+# SQL scripts deployment order
+sql_scripts:
+  setup:
+    - sql/setup/00_database_setup.sql
+    - sql/setup/01_warehouse_configuration.sql
+    - sql/setup/02_schema_creation.sql
+    - sql/setup/03_permissions.sql
+  
+  data_generation:
+    - sql/data_generation/prescription_data_generator.sql
+    - sql/data_generation/patient_data_generator.sql
+    - sql/data_generation/marketing_events_generator.sql
+  
+  features:
+    - sql/features/connectors/*.sql
+    - sql/features/snowpipe/*.sql
+    - sql/features/dynamic_tables/*.sql
+    - sql/features/governance/*.sql
+    - sql/features/cortex/*.sql
+    - sql/features/marketplace/*.sql

@@ -1,0 +1,56 @@
+---
+description: Snowflake Demo Development Rules for Pharmacy2U
+globs: ["**/*.sql", "**/*.py", "**/*.yml", "**/*.yaml", "**/*.toml"]
+alwaysApply: true
+---
+
+# Snowflake Demo Development Rules for Pharmacy2U
+
+## Project Context
+Industry: UK Online Pharmacy & Healthcare
+Business Problem: Data fragmentation across SQL Server, PostgreSQL, and MariaDB creating scalability bottlenecks and barriers to AI/ML innovation
+Demo Duration: 45 minutes (3 vignettes @ 13-15 minutes each)
+
+## SQL Development Standards
+- Use Snowflake-specific syntax and functions
+- Default all warehouses to XSMALL for cost efficiency
+- Set warehouse auto-suspend to 60 seconds maximum
+- Naming conventions: pharmacy2u_demo_{vignette}_{feature}_{component}
+- Include explanatory comments for audience understanding
+- Optimize for pharmaceutical data patterns (prescriptions, patients, drug codes)
+- Use UK-specific data formats (NHS numbers, BNF codes)
+
+## Streamlit in Snowflake Standards
+- MANDATORY: Use get_active_session() for native Snowflake deployment
+- NEVER use st.secrets or Session.builder.configs(st.secrets).create()
+- Create environment.yml with snowflake channel
+- Implement comprehensive error handling with fallbacks
+- Design for executive audience consumption
+- Include Pharmacy2U branding and healthcare-appropriate UI
+- GDPR-compliant patterns with data privacy controls
+
+## Data Generation Guidelines
+- Snowpark Python for large datasets >100K records (prescriptions, patients)
+- SQL generation for simple reference data <10K records (drug catalogs, pharmacy locations)
+- Local Python for file-based ingestion scenarios (marketing events JSON)
+- Embed business signal that supports pharmaceutical demo narrative
+- Target performance: Snowpark 1M+/5min, SQL 100K+/2min, Local 500K+/3min
+- Use realistic UK pharmaceutical patterns (BNF codes, NHS numbers, seasonal variations)
+
+## Code Quality Standards
+- Include type hints in Python code
+- Write comprehensive docstrings with business context
+- Implement logging for troubleshooting
+- Create modular, reusable components
+- Prioritize visual impact over code elegance for demos
+- Ensure GDPR compliance for patient data handling
+- Follow pharmaceutical domain naming conventions
+
+## Demo-Specific Guidelines
+- 45-minute total timing constraint (strict)
+- Vignette 1: 13 min (Fragmentation → Foundation)
+- Vignette 2: 13 min (Building Trust)
+- Vignette 3: 15 min (AI-Powered Future)
+- Build for mixed technical/business audience
+- Balance technical "wow moments" with business value
+- Pre-configure environments for smooth demo flow
