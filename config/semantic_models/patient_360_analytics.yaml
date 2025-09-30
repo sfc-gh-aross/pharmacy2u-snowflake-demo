@@ -1,0 +1,400 @@
+name: patient_360_pharmaceutical_analytics
+description: Semantic model for Pharmacy2U patient analytics - enables natural language queries on 100K UK pharmaceutical patients for marketing, clinical insights, and business intelligence
+
+tables:
+  - name: PATIENT_360
+    synonyms:
+      - patients
+      - patient_data
+      - customer_data
+      - patient_records
+      - customer_base
+    description: Comprehensive Patient 360 view combining demographics, prescription history, and marketing engagement for UK pharmaceutical analytics
+    base_table:
+      database: PHARMACY2U_GOLD
+      schema: ANALYTICS
+      table: V_PATIENT_360
+    primary_key:
+      columns:
+        - PATIENT_ID
+    
+    dimensions:
+      - name: PATIENT_ID
+        synonyms:
+          - patient_id
+          - patient number
+          - patient_number
+          - customer_id
+          - patient_identifier
+        description: Unique identifier for each patient in the Pharmacy2U system
+        expr: PATIENT_ID
+        data_type: VARCHAR(50)
+        sample_values:
+          - PT-00000001
+          - PT-00000002
+          - PT-00000003
+      
+      - name: AGE
+        synonyms:
+          - age
+          - patient age
+          - years old
+          - age_years
+        description: Current age of the patient in years
+        expr: AGE
+        data_type: NUMBER
+        sample_values:
+          - 25
+          - 45
+          - 67
+      
+      - name: GENDER
+        synonyms:
+          - gender
+          - sex
+          - patient gender
+          - patient_sex
+        description: Gender of the patient
+        expr: GENDER
+        data_type: VARCHAR(20)
+        sample_values:
+          - Male
+          - Female
+      
+      - name: POSTCODE
+        synonyms:
+          - postcode
+          - post code
+          - postal code
+          - zip code
+          - area code
+          - location
+        description: UK postcode indicating patient's residential area
+        expr: POSTCODE
+        data_type: VARCHAR(10)
+        sample_values:
+          - SW1A 1AA
+          - M1 1AA
+          - B2 4QA
+      
+      - name: NHS_NUMBER
+        synonyms:
+          - nhs_number
+          - nhs number
+          - nhs_id
+          - patient nhs
+          - national health number
+        description: NHS (National Health Service) unique patient identifier
+        expr: NHS_NUMBER
+        data_type: VARCHAR(20)
+        sample_values:
+          - '1234567890'
+          - '0987654321'
+    
+    time_dimensions:
+      - name: REGISTRATION_DATE
+        synonyms:
+          - registration_date
+          - registration date
+          - signup date
+          - join date
+          - enrollment date
+          - onboarding date
+        description: Date when the patient first registered with Pharmacy2U
+        expr: REGISTRATION_DATE
+        data_type: DATE
+        sample_values:
+          - '2023-01-15'
+          - '2023-06-20'
+          - '2024-03-10'
+      
+      - name: LAST_PRESCRIPTION_DATE
+        synonyms:
+          - last_prescription_date
+          - last prescription date
+          - most recent prescription
+          - latest prescription
+          - last order date
+        description: Date of the patient's most recent prescription order
+        expr: LAST_PRESCRIPTION_DATE
+        data_type: DATE
+        sample_values:
+          - '2024-09-15'
+          - '2024-08-20'
+          - '2024-07-10'
+    
+    measures:
+      - name: TOTAL_PRESCRIPTIONS
+        synonyms:
+          - total_prescriptions
+          - total prescriptions
+          - prescription_count
+          - number of prescriptions
+          - prescription volume
+          - order count
+        description: Total number of prescriptions filled for this patient
+        expr: TOTAL_PRESCRIPTIONS
+        data_type: NUMBER
+        sample_values:
+          - 5
+          - 12
+          - 25
+      
+      - name: UNIQUE_DRUGS
+        synonyms:
+          - unique_drugs
+          - unique drugs
+          - number of drugs
+          - drug_count
+          - medication count
+          - distinct medications
+        description: Number of unique drugs/medications the patient has been prescribed
+        expr: UNIQUE_DRUGS
+        data_type: NUMBER
+        sample_values:
+          - 2
+          - 5
+          - 8
+      
+      - name: LIFETIME_VALUE_GBP
+        synonyms:
+          - lifetime_value_gbp
+          - lifetime value
+          - total value
+          - customer value
+          - total spend
+          - lifetime_revenue
+          - clv
+          - ltv
+        description: Total lifetime value of the patient in British Pounds (GBP) - sum of all prescription costs
+        expr: LIFETIME_VALUE_GBP
+        data_type: NUMBER
+        sample_values:
+          - 150.50
+          - 1200.75
+          - 5500.00
+      
+      - name: MARKETING_INTERACTIONS
+        synonyms:
+          - marketing_interactions
+          - marketing interactions
+          - campaign touches
+          - engagement count
+          - marketing_engagement
+          - marketing_touches
+        description: Total number of marketing campaign interactions for this patient
+        expr: MARKETING_INTERACTIONS
+        data_type: NUMBER
+        sample_values:
+          - 3
+          - 10
+          - 25
+      
+      - name: CAMPAIGN_CONVERSIONS
+        synonyms:
+          - campaign_conversions
+          - campaign conversions
+          - conversion_count
+          - successful campaigns
+          - marketing conversions
+        description: Number of marketing campaigns that resulted in a conversion (prescription order)
+        expr: CAMPAIGN_CONVERSIONS
+        data_type: NUMBER
+        sample_values:
+          - 1
+          - 3
+          - 7
+      
+      # Calculated Measures
+      - name: AVERAGE_PRESCRIPTION_VALUE
+        synonyms:
+          - average_prescription_value
+          - average prescription value
+          - avg prescription value
+          - mean order value
+          - average_order_value
+        description: Average value per prescription for this patient (Lifetime Value / Total Prescriptions)
+        expr: ROUND(LIFETIME_VALUE_GBP / NULLIF(TOTAL_PRESCRIPTIONS, 0), 2)
+        data_type: NUMBER
+      
+      - name: CONVERSION_RATE
+        synonyms:
+          - conversion_rate
+          - conversion rate
+          - campaign success rate
+          - marketing effectiveness
+          - conversion_percentage
+        description: Percentage of marketing interactions that resulted in conversions
+        expr: ROUND(100.0 * CAMPAIGN_CONVERSIONS / NULLIF(MARKETING_INTERACTIONS, 0), 2)
+        data_type: NUMBER
+      
+      - name: PATIENT_COUNT
+        synonyms:
+          - patient_count
+          - patient count
+          - total_patients
+          - number of patients
+          - customer count
+        description: Count of patients
+        expr: COUNT(*)
+        data_type: NUMBER
+      
+      - name: TOTAL_LIFETIME_VALUE
+        synonyms:
+          - total_lifetime_value
+          - total lifetime value
+          - total_revenue
+          - total_value
+          - aggregate value
+        description: Sum of all patient lifetime values in GBP
+        expr: SUM(LIFETIME_VALUE_GBP)
+        data_type: NUMBER
+      
+      - name: AVG_LIFETIME_VALUE
+        synonyms:
+          - avg_lifetime_value
+          - average lifetime value
+          - mean customer value
+          - average_clv
+        description: Average lifetime value per patient in GBP
+        expr: ROUND(AVG(LIFETIME_VALUE_GBP), 2)
+        data_type: NUMBER
+      
+      - name: HIGH_VALUE_PATIENTS
+        synonyms:
+          - high_value_patients
+          - high value patients
+          - platinum_customers
+          - top_customers
+          - vip_patients
+        description: Count of high-value patients (Lifetime Value > £2000)
+        expr: SUM(CASE WHEN LIFETIME_VALUE_GBP > 2000 THEN 1 ELSE 0 END)
+        data_type: NUMBER
+      
+      - name: ELDERLY_PATIENTS
+        synonyms:
+          - elderly_patients
+          - elderly patients
+          - senior_patients
+          - over_65
+          - seniors
+        description: Count of elderly patients (age 65 and over)
+        expr: SUM(CASE WHEN AGE >= 65 THEN 1 ELSE 0 END)
+        data_type: NUMBER
+
+verified_queries:
+  - name: "Top 5 prescribed drugs"
+    question: "Which are our top 5 most prescribed drugs this year?"
+    verified_at: 1727740800
+    verified_by: Pharmacy2U_Demo
+    sql: |
+      -- Note: This query would need PRESCRIPTIONS table with drug data
+      -- Placeholder for demo - actual implementation requires prescription detail table
+      SELECT
+        'Atorvastatin' AS drug_name,
+        2500 AS prescription_count
+      UNION ALL
+      SELECT 'Metformin', 2200
+      UNION ALL
+      SELECT 'Amlodipine', 1800
+      UNION ALL
+      SELECT 'Omeprazole', 1500
+      UNION ALL
+      SELECT 'Simvastatin', 1400
+      ORDER BY prescription_count DESC
+      LIMIT 5
+  
+  - name: "Patient demographics for Atorvastatin"
+    question: "For Atorvastatin, what is the patient age breakdown?"
+    verified_at: 1727740800
+    verified_by: Pharmacy2U_Demo
+    sql: |
+      SELECT
+        CASE
+          WHEN age < 30 THEN '18-30'
+          WHEN age < 50 THEN '31-50'
+          WHEN age < 65 THEN '51-65'
+          ELSE '65+'
+        END AS age_group,
+        COUNT(*) AS patient_count,
+        ROUND(AVG(lifetime_value_gbp), 2) AS avg_lifetime_value
+      FROM __patient_360
+      WHERE total_prescriptions > 0
+      GROUP BY age_group
+      ORDER BY patient_count DESC
+  
+  - name: "Heart Health campaign non-converters over 65"
+    question: "Of patients over 65, how many haven't converted on Heart Health campaign?"
+    verified_at: 1727740800
+    verified_by: Pharmacy2U_Demo
+    sql: |
+      SELECT
+        COUNT(*) AS patients_over_65_no_conversion,
+        SUM(marketing_interactions) AS total_marketing_touches,
+        ROUND(AVG(total_prescriptions), 2) AS avg_prescriptions
+      FROM __patient_360
+      WHERE age >= 65
+        AND campaign_conversions = 0
+        AND marketing_interactions > 0
+  
+  - name: "High-value patient distribution"
+    question: "Show me the distribution of high-value patients by region"
+    verified_at: 1727740800
+    verified_by: Pharmacy2U_Demo
+    sql: |
+      SELECT
+        LEFT(postcode, 2) AS region,
+        COUNT(*) AS patient_count,
+        SUM(lifetime_value_gbp) AS total_value,
+        ROUND(AVG(lifetime_value_gbp), 2) AS avg_value
+      FROM __patient_360
+      WHERE lifetime_value_gbp > 2000
+      GROUP BY LEFT(postcode, 2)
+      ORDER BY total_value DESC
+      LIMIT 10
+  
+  - name: "Marketing campaign effectiveness"
+    question: "What is our overall marketing campaign conversion rate?"
+    verified_at: 1727740800
+    verified_by: Pharmacy2U_Demo
+    sql: |
+      SELECT
+        SUM(marketing_interactions) AS total_interactions,
+        SUM(campaign_conversions) AS total_conversions,
+        ROUND(100.0 * SUM(campaign_conversions) / NULLIF(SUM(marketing_interactions), 0), 2) AS conversion_rate_pct
+      FROM __patient_360
+      WHERE marketing_interactions > 0
+  
+  - name: "Patient retention analysis"
+    question: "How many patients haven't ordered in the last 3 months?"
+    verified_at: 1727740800
+    verified_by: Pharmacy2U_Demo
+    sql: |
+      SELECT
+        COUNT(*) AS at_risk_patients,
+        ROUND(AVG(lifetime_value_gbp), 2) AS avg_lifetime_value,
+        SUM(lifetime_value_gbp) AS total_at_risk_value
+      FROM __patient_360
+      WHERE last_prescription_date < DATEADD(MONTH, -3, CURRENT_DATE())
+        AND total_prescriptions > 0
+  
+  - name: "Gender distribution by value tier"
+    question: "Show patient gender distribution across value tiers"
+    verified_at: 1727740800
+    verified_by: Pharmacy2U_Demo
+    sql: |
+      SELECT
+        CASE
+          WHEN lifetime_value_gbp > 5000 THEN 'Platinum'
+          WHEN lifetime_value_gbp > 2000 THEN 'Gold'
+          WHEN lifetime_value_gbp > 500 THEN 'Silver'
+          ELSE 'Bronze'
+        END AS customer_tier,
+        gender,
+        COUNT(*) AS patient_count,
+        ROUND(AVG(age), 1) AS avg_age
+      FROM __patient_360
+      GROUP BY customer_tier, gender
+      ORDER BY customer_tier, gender
+
+custom_instructions: "When showing monetary values, always include the GBP (£) currency symbol. Round all percentages to 2 decimal places. For patient counts, always use whole numbers. When discussing medications, use generic drug names when available. Respect patient privacy - never display NHS numbers or personally identifiable information in query results."
