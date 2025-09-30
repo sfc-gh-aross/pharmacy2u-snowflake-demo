@@ -116,7 +116,9 @@ How many patients do we have?
 
 **Wait for response, point to answer:**
 
-> "100,000 patients. Instant answer. Notice the agent understood this is about our patient base, generated SQL against our governed semantic model, and returned the result. Sarah never saw the SQL, never knew it happened. **Natural language to instant answer.**"
+> "100 million patients. Instant answer in under 2 seconds. Notice the agent understood this is about our patient base, generated SQL against our **materialized PATIENT_360 dynamic table**, and returned the result. Sarah never saw the SQL, never knew it happened. **Natural language to instant answer.**
+>
+> **This is key**: We're querying 100 million patient records with complex aggregations, and it's sub-second because the data is materialized and auto-refreshing. In Microsoft Fabric, you'd need to manually configure aggregations in Power BI or build separate views—here, it's automatic."
 
 ---
 
@@ -161,7 +163,9 @@ Of patients over 65, how many haven't converted on Heart Health campaign?
 
 **PAUSE. Let the number sink in. Then point to the screen:**
 
-> "**KEY MOMENT #1**. In 10 seconds, Sarah just identified **4,927 actionable patients**. Let me break down what just happened and why this matters:
+> "**KEY MOMENT #1**. In 10 seconds, Sarah just identified **4,927 actionable patients from a database of 100 million**. Let me break down what just happened and why this matters:
+>
+> **How is this so fast?** The Intelligence Agent queries the PATIENT_360 **dynamic table**—materialized, auto-refreshing analytics data optimized for instant performance. No manual view building, no aggregation configuration. Snowflake handles it automatically.
 
 **Point to the insights in the agent response:**
 
@@ -269,7 +273,13 @@ Show me the distribution of high-value patients by region
 
 **Point to the dashboard loading:**
 
-> "This is a Python application running inside Snowflake, querying Patient 360 data in real-time. Watch how it loads..."
+> "This is a Python application running inside Snowflake, querying the PATIENT_360 dynamic table—**100 million patient records, materialized for instant performance**. Watch how fast it loads..."
+
+**After dashboard loads (emphasize performance):**
+
+> "Sub-second load time on 100 million patients. This is the power of Dynamic Tables—data pre-aggregated, auto-refreshing every 5 minutes, zero manual optimization required. 
+>
+> **Compare to Fabric**: You'd need to manually build aggregations in multiple places, manage refresh schedules separately, and optimize each query individually. Here, it's automatic."
 
 **Walk through the dashboard sections:**
 
@@ -319,7 +329,9 @@ Show me the distribution of high-value patients by region
 
 > "This dashboard—KPIs, charts, filters, interactivity—was built in under 300 lines of Python. No complex BI tool configuration, no semantic layer setup in a separate tool. Just Python code deployed to Snowflake.
 >
-> Your team can iterate on dashboards at the speed of code, version control them in Git, and deploy them instantly."
+> Your team can iterate on dashboards at the speed of code, version control them in Git, and deploy them instantly.
+>
+> **And it scales effortlessly**: We're running this on 100 million patients. Tomorrow, if you scale to 500 million, the dynamic table handles it automatically—no dashboard changes, no performance tuning."
 
 **Timing checkpoint**: 8 minutes elapsed
 
@@ -600,12 +612,16 @@ LIMIT 10;
 > - Semantic models uploaded once, available to all tools
 > - Python-based dashboards with no separate BI infrastructure
 > - Serverless, pay-per-query
+> - **Performance**: Materialized dynamic tables enable sub-second queries on 100M+ records
+> - **Auto-optimization**: No manual aggregations or query tuning required
 >
 > **Power BI Q&A + Power BI (Fabric equivalent)**:
 > - Requires data copy to Power BI Premium workspace
 > - Separate semantic model configuration in Power BI
 > - Separate BI service to manage and license
 > - Power BI Premium: £4,995/month minimum capacity
+> - **Performance**: Manual aggregation configuration required for large datasets
+> - **Optimization**: Separate import vs DirectQuery tradeoffs to manage
 >
 > **Snowflake Cortex AI Functions**:
 > - Native SQL functions (SENTIMENT, SUMMARIZE, TRANSLATE)

@@ -276,12 +276,12 @@ CLONE PHARMACY2U_GOLD;
 
 -- Verify it exists and has data
 USE DATABASE PHARMACY2U_GOLD_DEV;
-SELECT COUNT(*) FROM ANALYTICS.V_PATIENT_360;
+SELECT COUNT(*) FROM ANALYTICS.PATIENT_360;
 ```
 
 **Point to execution time and result:**
 
-> "**KEY MOMENT #3**: We just created a perfect, readable, writable copy of the entire GOLD database with 100,000 patient records. Execution time: **Milliseconds. Storage cost: Zero.**
+> "**KEY MOMENT #3**: We just created a perfect, readable, writable copy of the entire GOLD database with **100 million patient records**. Execution time: **Milliseconds. Storage cost: Zero.**
 >
 > How? Snowflake uses metadata pointers—both databases reference the same underlying storage until you make changes to the clone. It's a snapshot in time, fully independent, zero cost to create."
 

@@ -194,8 +194,9 @@ days = timeframe_days[selected_timeframe]
 def load_patient_360_data(_session):
     """Load Patient 360 view with comprehensive error handling"""
     try:
+        # Using PATIENT_360 dynamic table for performance (materialized)
         sql = f"""
-        SELECT * FROM PHARMACY2U_GOLD.ANALYTICS.V_PATIENT_360
+        SELECT * FROM PHARMACY2U_GOLD.ANALYTICS.PATIENT_360
         WHERE REGISTRATION_DATE >= DATEADD(DAY, -{days}, CURRENT_DATE())
         LIMIT 10000
         """

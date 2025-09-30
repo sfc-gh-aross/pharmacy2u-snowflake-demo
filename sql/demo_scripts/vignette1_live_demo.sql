@@ -82,6 +82,7 @@ LIMIT 10;
 
 -- Preview the view structure (in UI: Click view, show preview tab)
 -- Then run this query to show high-value patients:
+-- Note: Using PATIENT_360 dynamic table for faster performance
 
 SELECT 
     PATIENT_ID,
@@ -92,18 +93,19 @@ SELECT
     LIFETIME_VALUE_GBP,
     MARKETING_INTERACTIONS,
     CAMPAIGN_CONVERSIONS
-FROM PHARMACY2U_GOLD.ANALYTICS.V_PATIENT_360
+FROM PHARMACY2U_GOLD.ANALYTICS.PATIENT_360
 WHERE LIFETIME_VALUE_GBP > 2000
 ORDER BY LIFETIME_VALUE_GBP DESC
 LIMIT 10;
 
 -- Summary stats for impact (optional talking point)
+-- Note: Using PATIENT_360 dynamic table for sub-second response
 SELECT 
     COUNT(*) as total_patients,
     ROUND(AVG(LIFETIME_VALUE_GBP), 2) as avg_lifetime_value,
     SUM(TOTAL_PRESCRIPTIONS) as total_prescriptions,
     COUNT(DISTINCT CASE WHEN CAMPAIGN_CONVERSIONS > 0 THEN PATIENT_ID END) as converted_patients
-FROM PHARMACY2U_GOLD.ANALYTICS.V_PATIENT_360;
+FROM PHARMACY2U_GOLD.ANALYTICS.PATIENT_360;
 
 -- ============================================================================
 -- DEMO POINT 5: POWER BI DIRECTQUERY
@@ -166,7 +168,7 @@ SELECT 'Databases OK' as status WHERE (
 ) = 3;
 
 SELECT 'Patient count OK' as status, COUNT(*) as count 
-FROM PHARMACY2U_GOLD.ANALYTICS.V_PATIENT_360
+FROM PHARMACY2U_GOLD.ANALYTICS.PATIENT_360
 HAVING COUNT(*) >= 100000;
 
 SELECT 'Marketing events OK' as status, COUNT(*) as count 

@@ -31,8 +31,9 @@ USE SCHEMA ANALYTICS;
 -- Supporting SQL (if agent fails, run these manually):
 
 -- Query 1 equivalent:
+-- Note: Using PATIENT_360 dynamic table for performance (materialized)
 SELECT COUNT(*) as total_patients 
-FROM V_PATIENT_360;
+FROM PATIENT_360;
 
 -- Query 2 equivalent:
 SELECT 
@@ -45,11 +46,12 @@ ORDER BY prescription_count DESC
 LIMIT 5;
 
 -- Query 4 equivalent (THE KEY MOMENT):
+-- Note: Using PATIENT_360 dynamic table for sub-second performance
 SELECT 
     COUNT(DISTINCT p.PATIENT_ID) as non_converter_count,
     SUM(p.MARKETING_INTERACTIONS) as total_marketing_touches,
     ROUND(AVG(p.TOTAL_PRESCRIPTIONS), 2) as avg_prescriptions_per_patient
-FROM V_PATIENT_360 p
+FROM PATIENT_360 p
 WHERE p.AGE > 65
   AND p.CAMPAIGN_CONVERSIONS = 0;
 
@@ -63,12 +65,13 @@ WHERE p.AGE > 65
 -- Navigate to: Snowsight → Streamlit → Apps → PATIENT_360_DASHBOARD
 
 -- Supporting query (what the dashboard is running):
+-- Note: Using PATIENT_360 dynamic table for fast dashboard loads
 SELECT 
     CUSTOMER_TIER,
     COUNT(*) as patient_count,
     ROUND(AVG(LIFETIME_VALUE_GBP), 2) as avg_lifetime_value,
     SUM(TOTAL_PRESCRIPTIONS) as total_prescriptions
-FROM V_PATIENT_360
+FROM PATIENT_360
 GROUP BY CUSTOMER_TIER
 ORDER BY 
     CASE CUSTOMER_TIER
@@ -89,6 +92,7 @@ ORDER BY
 -- SQL demo version - Patient churn feature engineering:
 
 -- Create churn features view
+-- Note: Using PATIENT_360 dynamic table as source for better performance
 CREATE OR REPLACE VIEW V_PATIENT_CHURN_FEATURES AS
 SELECT 
     PATIENT_ID,
@@ -105,7 +109,7 @@ SELECT
         WHEN DATEDIFF(DAY, LAST_PRESCRIPTION_DATE, CURRENT_DATE()) > 60 THEN 'Medium'
         ELSE 'Low'
     END as churn_risk_category
-FROM V_PATIENT_360;
+FROM PATIENT_360;
 
 -- Show churn risk distribution
 SELECT 
@@ -138,7 +142,7 @@ SELECT
     c.churn_risk_category,
     c.days_since_last_prescription,
     p.LIFETIME_VALUE_GBP
-FROM V_PATIENT_360 p
+FROM PATIENT_360 p
 JOIN V_PATIENT_CHURN_FEATURES c ON p.PATIENT_ID = c.PATIENT_ID
 WHERE c.churn_risk_category = 'High'
   AND p.CUSTOMER_TIER IN ('Gold', 'Platinum')
@@ -220,7 +224,7 @@ SELECT
         WHEN ext.area_deprivation_index >= 7 THEN 'High Deprivation Area'
         ELSE 'Lower Deprivation Area'
     END AS deprivation_category
-FROM V_PATIENT_360 p
+FROM PATIENT_360 p
 LEFT JOIN PHARMACY2U_GOLD.MARKETPLACE_DATA.EXTERNAL_UK_POSTCODE_DEMOGRAPHICS ext
     ON LEFT(p.postcode, 2) = ext.postcode_prefix
 LIMIT 10;
@@ -235,7 +239,7 @@ SELECT
     COUNT(DISTINCT p.patient_id) as patient_count,
     ROUND(AVG(p.lifetime_value_gbp), 2) as avg_lifetime_value,
     ROUND(AVG(p.total_prescriptions), 2) as avg_prescriptions
-FROM V_PATIENT_360 p
+FROM PATIENT_360 p
 LEFT JOIN PHARMACY2U_GOLD.MARKETPLACE_DATA.EXTERNAL_UK_POSTCODE_DEMOGRAPHICS ext
     ON LEFT(p.postcode, 2) = ext.postcode_prefix
 WHERE ext.area_deprivation_index IS NOT NULL
@@ -258,9 +262,9 @@ DESCRIBE CORTEX SEARCH SERVICE PHARMACY2U_GOLD.ANALYTICS.PATIENT_360_SEARCH_SERV
 -- Check semantic model is deployed
 LIST @PHARMACY2U_GOLD.ANALYTICS.SEMANTIC_MODELS;
 
--- Check Patient 360 view has data
+-- Check Patient 360 dynamic table has data
 SELECT COUNT(*) as patient_count 
-FROM V_PATIENT_360
+FROM PATIENT_360
 HAVING COUNT(*) >= 100000;
 
 -- Check patient feedback table exists

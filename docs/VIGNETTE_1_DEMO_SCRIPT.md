@@ -20,7 +20,7 @@
 ### Validation Checks:
 - [ ] Warehouse `PHARMACY2U_DEMO_WH` is RUNNING
 - [ ] All databases exist: PHARMACY2U_BRONZE, PHARMACY2U_SILVER, PHARMACY2U_GOLD
-- [ ] Patient count: `SELECT COUNT(*) FROM PHARMACY2U_GOLD.ANALYTICS.V_PATIENT_360` returns 100,000
+- [ ] Patient count: `SELECT COUNT(*) FROM PHARMACY2U_GOLD.ANALYTICS.PATIENT_360` returns 100,000,000 (using dynamic table for performance)
 - [ ] Dynamic Tables are ACTIVE (check status)
 - [ ] **Power BI Dashboard**: Patient 360 dashboard open and connected
 
@@ -167,9 +167,13 @@ LIMIT 10;
 >
 > **No DAGs. No Airflow. No SSIS packages to manage.**"
 
-**Click "Details" or "History" tab:**
+**Click "Details" tab (emphasize these UI elements):**
 
-> "Look at the refresh history. This pipeline is running automatically, staying fresh, and we never wrote a single line of orchestration code."
+> "Look at these details—**Refresh mode: AUTO**, **Target lag: 1 hour**, **Scheduling state: ACTIVE**. This is all managed automatically."
+
+**Click "History" tab (if available):**
+
+> "And here's the refresh history. This pipeline is running automatically, staying fresh, and we never wrote a single line of orchestration code. Each refresh is logged, tracked, and auditable."
 
 **Navigate**: Worksheets → Run a query on the Dynamic Table
 
@@ -219,6 +223,7 @@ LIMIT 10;
 
 ```sql
 -- Show 360-degree patient view
+-- Note: Querying PATIENT_360 dynamic table for optimal performance
 SELECT 
     PATIENT_ID,
     AGE,
@@ -228,7 +233,7 @@ SELECT
     LIFETIME_VALUE_GBP,
     MARKETING_INTERACTIONS,
     CAMPAIGN_CONVERSIONS
-FROM PHARMACY2U_GOLD.ANALYTICS.V_PATIENT_360
+FROM PHARMACY2U_GOLD.ANALYTICS.PATIENT_360
 WHERE LIFETIME_VALUE_GBP > 2000
 ORDER BY LIFETIME_VALUE_GBP DESC
 LIMIT 10;
@@ -236,7 +241,7 @@ LIMIT 10;
 
 **Point to results:**
 
-> "These are your high-value patients. This query ran in milliseconds against 100,000 patient records. And this view is what powers everything else you'll see today—BI dashboards, AI analytics, self-service queries."
+> "These are your high-value patients. This query ran in under 2 seconds against **100 million patient records**—notice we're querying the PATIENT_360 **dynamic table**, which is materialized and auto-refreshing. This gives us instant performance even at massive scale. And this powers everything else you'll see today—BI dashboards, AI analytics, self-service queries."
 
 **KEY MOMENT #2 - Drive this home:**
 > "**Let's recap what we just did:**
